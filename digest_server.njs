@@ -26,19 +26,28 @@ app.use(session({
 const favicon = path.join(__dirname, 'favicon.ico');
 const aes_js = path.join(__dirname, 'js', 'aes.min.js');
 
-/* If the browser can accept Gzip or deflate compression, send it compressed output. Otherwise, send it the stream's contents. *
+/* If the browser can accept Gzip or deflate compression, send it compressed output. Otherwise, send it the stream's contents. */
 var sendResponse = function (file, request, response, stat) {
 	if (_.isUndefined(stat)) stat = 200;
 	var acc = accepts(request);
 	const in_stream = fs.createReadStream(file);
 	if (acc.encodings().includes("gzip")) {
-		response.writeHead(stat, { 'Content-Encoding': 'gzip' });
-		in_stream.pipe(zlib.createGzip()).pipe(response);
+		try {
+			response.writeHead(stat, { 'Content-Encoding': 'gzip' });
+			in_stream.pipe(zlib.createGzip()).pipe(response);
+			in_stream.pipe(zlib.createGzip()).pipe(response);
+		} catch (err) {
+			in_stream.pipe(response);
+		}
 	} else if (acc.encodings().includes("deflate")) {
-		response.writeHead(stat, { 'Content-Encoding': 'deflate' });
-		in_stream.pipe(zlib.createDeflate()).pipe(response);
+		try {
+			response.writeHead(stat, { 'Content-Encoding': 'deflate' });
+			in_stream.pipe(zlib.createDeflate()).pipe(response);
+		} catch (err) {
+			in_stream.pipe(response);
+		}
 	} else {
-		in_stream.pipe(response); 
+		in_stream.pipe(response);
 	}
 };
 
@@ -126,14 +135,20 @@ server.on('request', function(req, resp) {
 	if (req.url.match(/^\/poweroff.*/) || req.url.match(/^\/shutdown.*/)) {
 		shutdownServer(req, resp);  // use this path to shut down the server, if user has provided proper auth
 	} else if (req.url.match(/^\/favicon.*/)) { // output the favicon
-		resp.setHeader('Content-Disposition', "inline; filename=favicon.ico"); // do not download
-		resp.setHeader('Content-type', 'image/x-icon'); // output HTTP headings
+		try {
+			resp.setHeader('Content-Disposition', "inline; filename=favicon.ico"); // do not download
+			resp.setHeader('Content-type', 'image/x-icon'); // output HTTP headings
+		} catch (err) {}
 		sendResponse(favicon, req, resp, 200);
-	} else if (req.url.match(/^\/aes.min.js/)) { // output the favicon
-		resp.writeHead(200, {'content-type': 'application/javascript'}); // output HTTP headings
+	} else if (req.url.match(/^\/aes.min.js/)) { // output the JS
+		try {
+			resp.writeHead(200, {'content-type': 'application/javascript'}); // output HTTP headings
+		} catch (err) { }
 		sendResponse(aes_js, req, resp, 200);
 	} else {
-		resp.writeHead(200, {'content-type': 'application/xhtml+xml; charset=utf-8'}); // output HTTP headings
+		try {
+			resp.writeHead(200, {'content-type': 'application/xhtml+xml; charset=utf-8'}); // output HTTP headings
+		} catch (err) {}
 		sendResponse('hello.html', req, resp);
 	}
 });
