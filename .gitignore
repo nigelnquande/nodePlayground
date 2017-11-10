@@ -16,3 +16,8 @@ jspm_packages/
 
 # dotenv environment variables file
 .env
+
+# Minified scripts and stylesheets
+js/*.min.js
+css/*.min.css
+
