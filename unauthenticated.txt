@@ -1,0 +1,1 @@
+Authentication failure: You must supply correct authentication details in order to shut down this server.
