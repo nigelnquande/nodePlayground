@@ -1,3 +1,4 @@
+/*! AES JS by ricmoo, as found at https://cdn.rawgit.com/ricmoo/aes-js/e27b99df/index.js */
 "use strict";
 
 (function(root) {
